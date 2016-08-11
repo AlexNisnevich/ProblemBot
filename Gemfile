@@ -1,4 +1,5 @@
 gem 'slack-ruby-bot'
+gem 'discordrb'
 gem 'celluloid-io'
 gem 'mechanize'
 gem 'imgkit'

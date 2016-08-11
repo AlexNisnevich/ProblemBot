@@ -2,7 +2,9 @@ require 'slack-ruby-bot'
 require 'mechanize'
 require 'imgkit'
 require 'upload_image'
+require 'discordrb'
 
+DIFFICULTIES = ["easy", "medium", "hard", "very hard"]
 $index_page = Mechanize.new.get('http://www.artofproblemsolving.com/wiki/index.php?title=AMC_Problems_and_Solutions')
 
 def get_problem(difficulty)
@@ -30,6 +32,7 @@ def get_problem(difficulty)
   end
 
   problem_query = "//div[@id='mw-content-text']//*[self::p|self::div][count(preceding::*[contains(text(), 'Solution')])=0]"
+  problem_page.search('#toc').remove
   problem_html = problem_page.parser
                              .xpath(problem_query).to_s
                              .gsub('"//', '"http://')
@@ -46,11 +49,10 @@ def get_problem(difficulty)
   }
 end
 
-class ProblemBot < SlackRubyBot::Bot
+class ProblemSlackBot < SlackRubyBot::Bot
   match /problem\?/ do |client, data, match|
-    difficulties = ["easy", "medium", "hard", "very hard"]
-    difficulty = difficulties.sample
-    difficulties.each {|d| difficulty = d if match.string.include?(d) }
+    difficulty = DIFFICULTIES.sample
+    DIFFICULTIES.each {|d| difficulty = d if match.string.include?(d) }
 
     client.say(text: "Let me fetch you a #{difficulty} problem ...", channel: data.channel)
 
@@ -62,4 +64,23 @@ class ProblemBot < SlackRubyBot::Bot
   end
 end
 
-ProblemBot.run
+if ENV['DISCORD_API_TOKEN'] && ENV['DISCORD_APP_ID']
+  bot = Discordrb::Bot.new(token: ENV['DISCORD_API_TOKEN'], application_id: ENV['DISCORD_APP_ID'])
+  
+  bot.message(end_with: 'problem?') do |event|
+    difficulty = DIFFICULTIES.sample
+    DIFFICULTIES.each {|d| difficulty = d if event.message.to_s.include?(d) }
+
+    event.respond "Let me fetch you a #{difficulty} problem ..."
+
+    problem = nil
+    problem = get_problem(difficulty) while problem.nil?
+
+    event.respond problem[:image_url]
+    event.respond "Solution: #{problem[:url]}"
+  end
+  
+  bot.run
+else
+  ProblemSlackBot.run
+end
