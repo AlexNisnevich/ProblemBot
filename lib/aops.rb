@@ -2,9 +2,27 @@ require 'mechanize'
 require 'imgkit'
 require 'upload_image'
 
+DIFFICULTIES = ["easy", "medium", "hard", "very hard"]
+
 class AoPS
   def initialize
     @index_page = Mechanize.new.get('http://www.artofproblemsolving.com/wiki/index.php?title=AMC_Problems_and_Solutions')
+  end
+
+  # Parses difficulty string (if any) from a given message,
+  # fetches a problem (retrying until one is found),
+  # and sends messages using a passed-in block.
+  def parse_message_and_fetch_problem(msg)
+    difficulty = DIFFICULTIES.sample
+    DIFFICULTIES.each {|d| difficulty = d if msg.include?(d) }
+
+    yield "Let me fetch you a #{difficulty} problem ..."
+
+    problem = nil
+    problem = $aops.get_problem(difficulty) while problem.nil?
+
+    yield problem[:image_url]
+    yield "Solution: #{problem[:url]}"
   end
 
   def get_problem(difficulty)

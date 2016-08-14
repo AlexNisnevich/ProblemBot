@@ -3,25 +3,18 @@ require 'discordrb'
 require_relative 'aops'
 
 class ProblemDiscordBot
-  def initialize
-    @bot = Discordrb::Bot.new(token: ENV['DISCORD_API_TOKEN'], application_id: ENV['DISCORD_APP_ID'])
+  def initialize(token, app_id)
+    @bot = Discordrb::Bot.new(token: token, application_id: app_id)
     @aops = AoPS.new
-    
-    @bot.message(end_with: 'problem?') do |event|
-      difficulty = DIFFICULTIES.sample
-      DIFFICULTIES.each {|d| difficulty = d if event.message.to_s.include?(d) }
-
-      event.respond "Let me fetch you a #{difficulty} problem ..."
-
-      problem = nil
-      problem = @aops.get_problem(difficulty) while problem.nil?
-
-      event.respond problem[:image_url]
-      event.respond "Solution: #{problem[:url]}"
-    end
   end
 
   def run
+    @bot.message(end_with: 'problem?') do |event|
+      @aops.parse_message_and_fetch_problem(event.message) do |text|
+        event.respond text
+      end
+    end
+
     @bot.run
   end
 end
