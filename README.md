@@ -31,3 +31,11 @@ DISCORD_APP_ID=<your bot's application ID> DISCORD_API_TOKEN=<your bot's API tok
 ```
 
 You can now ask the bot for problems by writing something like "May I have a problem?" _(to get a problem of random difficulty)_ or "May I have an easy/medium/hard/very hard problem?"
+
+## TODO
+
+- More sources of problems (not just the artofproblemsolving.com wiki)
+- Better handling of edge-cases in scraping (sometimes problems still show up incorrectly)
+- Clearer formatting (e.g. remove <a> tags)
+- Support more platforms (e.g. Messenger, Twitter, Reddit, &c.)
+- More expressive parsing of user input?
